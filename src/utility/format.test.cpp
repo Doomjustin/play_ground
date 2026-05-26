@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <format>
+#include <string>
 #include <system_error>
 
 #include <catch2/catch_test_macros.hpp>
@@ -33,6 +34,14 @@ enum class sample_enum : std::uint8_t {
     alpha,
 };
 
+struct sample_with_format_as {};
+
+auto format_as(const sample_with_format_as& value) -> int
+{
+    static_cast<void>(value);
+    return 42;
+}
+
 } // namespace
 
 TEST_CASE("format_as formats std::error_code")
@@ -40,6 +49,11 @@ TEST_CASE("format_as formats std::error_code")
     const auto ec = std::make_error_code(std::errc::invalid_argument);
 
     REQUIRE(std::format("{}", ec) == ec.message());
+}
+
+TEST_CASE("format_as passes formatting options through to the returned value")
+{
+    REQUIRE(std::format("{:#06x}", sample_with_format_as{}) == "0x002a");
 }
 
 TEST_CASE("formatter falls back to to_string")

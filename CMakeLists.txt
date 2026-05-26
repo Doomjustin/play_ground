@@ -32,3 +32,4 @@ if (${PROJECT_NAME}_BUILD_TESTS)
 endif()
 
 add_subdirectory(src)
+add_subdirectory(ground)
