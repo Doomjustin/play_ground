@@ -1,7 +1,7 @@
 # Summary
 
-## c++
-* [测试1](cpp/01.md "别名1")
+* [c++](cpp/intro.md)
+    * [xx_小而美](cpp/xx_utility/00_intro.md)
+        * [01](cpp/xx_utility/01_format.md "01.std::format体验优化")
 
-## python
-* [测试2](python/01.md)
+* [python](python/intro.md)
