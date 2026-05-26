@@ -1,64 +1,48 @@
-# std::format 强化器
+# 01
 
 ## 引入
+
 C++20 引入了 `std::format`，它把字符串拼接和格式化输出带到了标准库里，语法也比传统的 `operator<<` 更清爽。
 
 但它有一个现实问题：当你面对的是一堆项目里的自定义类型时，标准库并不会自动知道“该怎么把它们格式化成字符串”。如果每个类型都去手写 `std::formatter` 特化，成本会很高，而且维护起来也很碎。
 
 所以这里做了一个小而实用的“强化器”：让 `std::format` 尽量自动识别几种常见的输出方式，并按固定优先级选择最合适的格式化结果。
 
-## 设计目标
+其实本身`std::format` 的前身 `fmt` 在新版本中就提供了基于ADL的 `format_as` 方式，但是似乎在引入标准库的时候还没有这个方案，所以 `std::format` 也没有这个功能
+
+## 目标
 
 这套实现的目标很简单：
 
-- 尽量少写模板代码
-- 尽量复用类型本身已经提供的字符串化能力
-- 对常见场景提供默认回退
-- 让 `std::format("{}", value)` 在项目里更接近“开箱即用”
+* 尽量少写模板代码
+* 尽量复用类型本身已经提供的字符串化能力
+* 对常见场景提供默认回退
+* 让 `std::format("{}", value)` 在项目里更接近“开箱即用”
 
-## 整体思路
+## 思路
 
-当前实现放在 [src/utility/format.h](../../../src/utility/format.h) 和 [src/utility/format.cpp](../../../src/utility/format.cpp) 中。
+&#x20;通过 `std::formatter` 特化，为用户类型建立统一的回退链路。
 
-核心做法是两层：
+除了 fmt 的 format\_as 方式，我们顺手再引入类似Python的\_\_str\_\_和\_\_repr\_\_方式，按照优先级来自动格式化，以及兼容一下传统的流式输出。这样对于一些提供了流式输出的类，能更丝滑的兼容
 
-1. 先为个别标准类型提供 `format_as`
-2. 再通过一组 `std::formatter` 特化，为用户类型建立统一的回退链路
+这里有个对于enum类型的特化，其实每当我们想输出enum类型是，大部分情况下都想看到的是具体定义，而不是底层数据的值，比如
 
-它的判断顺序是固定的：
+```
+enum class Color { Red };
+std::format("{}", Color::Red); 
+```
 
-| 优先级 | 规则 | 结果 |
-| --- | --- | --- |
-| 1 | 存在 `format_as(value)` | 直接复用 `format_as` 的结果 |
-| 2 | 存在 `to_string()` | 使用 `to_string()` |
-| 3 | 存在 `to_repr()` | 使用 `to_repr()` |
-| 4 | 枚举类型 | 使用 `magic_enum::enum_name(value)` |
-| 5 | 支持 `operator<<` 的用户定义类型 | 通过流输出到 `std::ostringstream` |
+大部分情况下都希望输出的是Red，而不是0这样的数字。想实现这个方法在没有反射的时代很麻烦，所以这里我们用一个第三库来做，enum\_magic。
+
+我们这里定义一下查找顺序规则
+
+<table><thead><tr><th width="88.20001220703125">优先级</th><th width="292.20001220703125">规则</th><th>结果</th></tr></thead><tbody><tr><td>1</td><td>存在 <code>format_as(value)</code></td><td>直接复用 <code>format_as</code> 的结果</td></tr><tr><td>2</td><td>存在 <code>to_string()</code></td><td>使用 <code>to_string()</code></td></tr><tr><td>3</td><td>存在 <code>to_repr()</code></td><td>使用 <code>to_repr()</code></td></tr><tr><td>4</td><td>枚举类型</td><td>使用 <code>magic_enum::enum_name(value)</code></td></tr><tr><td>5</td><td>支持 <code>operator&#x3C;&#x3C;</code> 的用户定义类型</td><td>通过流输出到 <code>std::ostringstream</code></td></tr></tbody></table>
 
 这意味着，只要你的类型满足上面任意一种能力，它就可以直接参与 `std::format`。
 
-## 代码结构
-
-### `format_as`
-
-在 [src/utility/format.cpp](../../../src/utility/format.cpp) 中，只为 `std::error_code` 提供了一个 `format_as`：
-
-```cpp
-namespace pg {
-
-auto format_as(const std::error_code& ec) -> std::string
-{
-	return ec.message();
-}
-
-} // namespace pg
-```
-
-这代表 `std::error_code` 会被格式化成它的错误信息文本，而不是默认的原始对象表现。
-
 ### `has_*` 概念
 
-在 [src/utility/format.h](../../../src/utility/format.h) 中，先定义了一组检测概念：
+先定义了一组检测概念：
 
 ```cpp
 template<typename T>
@@ -82,8 +66,8 @@ concept has_ostream = requires(const T& t, std::ostream& os) { os << t; };
 
 ```cpp
 template<typename T>
-concept user_defined_type =
-	std::is_class_v<std::remove_cvref_t<T>> || std::is_union_v<std::remove_cvref_t<T>>;
+concept user_defined_type = 
+    std::is_class_v<std::remove_cvref_t<T>> || std::is_union_v<std::remove_cvref_t<T>>;
 ```
 
 这样可以避免把过于宽泛的流输出逻辑扩散到不该处理的类型上。
@@ -187,10 +171,10 @@ REQUIRE(std::format("{}", sample_enum::alpha) == "alpha");
 
 这套封装特别适合下面几类场景：
 
-- 项目里有很多轻量类型，不想逐个写 `std::formatter`
-- 已经有 `to_string()` / `to_repr()` 的代码风格
-- 大量使用枚举，需要稳定、可读的名字输出
-- 旧代码里已经写了 `operator<<`，想平滑接入 `std::format`
+* 项目里有很多轻量类型，不想逐个写 `std::formatter`
+* 已经有 `to_string()` / `to_repr()` 的代码风格
+* 大量使用枚举，需要稳定、可读的名字输出
+* 旧代码里已经写了 `operator<<`，想平滑接入 `std::format`
 
 ## 需要注意的点
 
@@ -205,14 +189,3 @@ REQUIRE(std::format("{}", sample_enum::alpha) == "alpha");
 ### `operator<<` 回退只是兼容层
 
 它解决的是“能格式化”，不是“最优格式化”。如果类型本身能提供更直接的字符串语义，优先实现 `format_as`、`to_string()` 或 `to_repr()` 会更清晰。
-
-## 小结
-
-这份实现的本质不是“重写 `std::format`”，而是给它补一层项目级别的自动适配：
-
-- 标准错误码走 `format_as`
-- 普通对象优先用自己的字符串接口
-- 枚举输出名字
-- 旧类型通过流输出兜底
-
-这样一来，`std::format` 在项目里就不只是一个标准库工具，而是一个更贴近业务对象的统一格式化入口。
