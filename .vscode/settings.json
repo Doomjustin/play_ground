@@ -1,0 +1,8 @@
+{
+    // cmake工具的输出日志编码
+    "cmake.outputLogEncoding": "utf-8",
+    "editor.formatOnSave": true,
+    "cmake.configureSettings": {
+        "CMAKE_TOOLCHAIN_FILE": "${env:VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+    },
+}

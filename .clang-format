@@ -1,0 +1,71 @@
+Language: Cpp
+Standard: Latest
+ColumnLimit: 100
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+IndentCaseLabels: false
+IndentAccessModifiers: false
+
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: false
+  AfterNamespace: false
+  AfterStruct: false
+  AfterEnum: false
+  AfterUnion: false
+  AfterControlStatement: Never
+  BeforeElse: true
+  BeforeCatch: true
+  AfterFunction: true
+  SplitEmptyFunction: false
+  IndentBraces: false
+
+BreakConstructorInitializers: BeforeComma
+BreakInheritanceList: BeforeComma
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
+ConstructorInitializerIndentWidth: 2
+AccessModifierOffset: -4
+BreakTemplateDeclarations: Yes
+
+AllowShortBlocksOnASingleLine: Never
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortLoopsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: Never
+
+RemoveBracesLLVM: true
+
+PointerAlignment: Left
+ReferenceAlignment: Left
+BinPackArguments: false
+BinPackParameters: false
+
+IndentRequiresClause: true
+BreakBeforeConceptDeclarations: Always
+SpacesInAngles: Leave
+
+SpaceBeforeAssignmentOperators: true
+SpaceAfterTemplateKeyword: false
+SpaceBeforeParens: ControlStatements
+SpaceInEmptyParentheses: false
+Cpp11BracedListStyle: false
+AlignConsecutiveAssignments: None
+AlignConsecutiveDeclarations: None
+
+SortIncludes: true
+IncludeBlocks: Regroup
+
+IncludeCategories:
+  - Regex: '^<[a-z0-9_]+>$'
+    Priority: 1
+  - Regex: '^<engine/.*>$'
+    Priority: 4
+  - Regex: '^<[a-zA-Z0-9_/\.]+\.(h|hpp)>$'
+    Priority: 2
+  - Regex: '^<gsl/.*>$'
+    Priority: 2
+  - Regex: '^<[a-zA-Z0-9_]+/[a-zA-Z0-9_/\.]+>$'
+    Priority: 3
+  - Regex: '^".*"'
+    Priority: 5
+PackConstructorInitializers: Never
