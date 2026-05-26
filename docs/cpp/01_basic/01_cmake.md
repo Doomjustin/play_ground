@@ -1,1 +1,1 @@
-# 1. 配置vscode
+# 1. cmake
