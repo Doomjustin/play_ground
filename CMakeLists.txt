@@ -16,12 +16,16 @@ cmake_dependent_option(${PROJECT_NAME}_BUILD_TESTS
     "BUILD_TESTING" OFF
 )
 
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
-include(ConfigSafeGuards)
-
 find_package(fmt CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(Microsoft.GSL CONFIG REQUIRED)
+find_package(magic_enum CONFIG REQUIRED)
+find_package(glaze CONFIG REQUIRED)
+find_package(ctre CONFIG REQUIRED)
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(liburing REQUIRED IMPORTED_TARGET liburing)
+pkg_check_modules(jemalloc REQUIRED IMPORTED_TARGET jemalloc)
 
 if (${PROJECT_NAME}_BUILD_TESTS)
     find_package(Catch2 CONFIG REQUIRED)

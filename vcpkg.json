@@ -3,7 +3,14 @@
         "fmt",
         "spdlog",
         "ms-gsl",
-        "catch2"
+        "catch2",
+        "magic-enum",
+        "ctre",
+        "glaze",
+        "liburing",
+        "jemalloc",
+        "boost",
+        "folly"
     ],
     "name": "playground",
     "version": "0.0.1",
