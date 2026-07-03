@@ -17,11 +17,14 @@ target_link_libraries(playground_utility
 
 if (${PROJECT_NAME}_BUILD_TESTS AND BG_UTILITY_TEST_SOURCE)
     include(Catch)
+    
     add_executable(playground_utility.test ${BG_UTILITY_TEST_SOURCE})
+    
     target_link_libraries(playground_utility.test
         PRIVATE
             pg::utility
             Catch2::Catch2WithMain
     )
+
     catch_discover_tests(playground_utility.test)
 endif()
